@@ -5,10 +5,10 @@ node_modules/
 
 *.zip
 *.log
+image.png
 
 .env
 .env.*
 
 dist/
 coverage/
-
