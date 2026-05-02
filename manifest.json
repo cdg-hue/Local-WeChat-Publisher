@@ -1,0 +1,9 @@
+{
+  "id": "local-wechat-publisher",
+  "name": "Local WeChat Publisher",
+  "version": "0.1.1",
+  "minAppVersion": "1.5.0",
+  "description": "在 Obsidian 本地将 Markdown 渲染为适合微信公众号粘贴的 HTML。",
+  "author": "OpenAI Codex",
+  "isDesktopOnly": false
+}
