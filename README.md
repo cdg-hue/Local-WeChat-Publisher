@@ -116,6 +116,38 @@ npm test
 
 Obsidian 实际运行只需要 `main.js`、`manifest.json`、`styles.css`。
 
+### 版本号与 Git tag 规则
+
+- 版本号使用语义化版本：`MAJOR.MINOR.PATCH`，例如 `0.1.1`、`0.1.2`
+- 每次发布前需要同步更新：
+  - `manifest.json`
+  - `package.json`
+  - `package-lock.json`
+  - `versions.json`
+- 推荐 Git tag 与 `manifest.json` 的 `version` 完全一致：
+  - 推荐：`0.1.2`
+  - 不推荐：`v0.1.2`
+- 如果后续提交 Obsidian 社区插件市场，Release tag 必须与插件版本保持一致，避免官方审核或自动下载出错。
+- GitHub Release 附件只需要上传：
+  - `main.js`
+  - `manifest.json`
+  - `styles.css`
+
+发布前检查：
+
+```bash
+npm run build
+npm test
+```
+
+发布示例：
+
+```bash
+git tag 0.1.2
+git push origin main
+git push origin 0.1.2
+```
+
 ## 常见问题
 
 ### 为什么 Obsidian 里看不到插件？
