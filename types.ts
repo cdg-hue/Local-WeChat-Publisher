@@ -3,6 +3,60 @@ import type { LocalWechatSettings } from "./settings";
 
 export type FontSize = "small" | "medium" | "large";
 
+export interface CustomStyle {
+  h1Color: string;
+  h1BackgroundColor: string;
+  h1Padding: string;
+  h1Center: boolean;
+  h2Color: string;
+  h2BackgroundColor: string;
+  h2Padding: string;
+  h2Center: boolean;
+  h3Color: string;
+  h3BackgroundColor: string;
+  h3Padding: string;
+  h3Center: boolean;
+  h4Color: string;
+  h4BackgroundColor: string;
+  h4Padding: string;
+  h4Center: boolean;
+  h5Color: string;
+  h5BackgroundColor: string;
+  h5Padding: string;
+  h5Center: boolean;
+  h6Color: string;
+  h6BackgroundColor: string;
+  h6Padding: string;
+  h6Center: boolean;
+  paragraphColor: string;
+  paragraphFontSize: string;
+  paragraphLineHeight: string;
+  paragraphMargin: string;
+  paragraphBackgroundColor: string;
+  paragraphPadding: string;
+  paragraphBorderRadius: string;
+  blockquoteBackgroundColor: string;
+  blockquoteBorderColor: string;
+  blockquoteColor: string;
+  blockquoteFontSize: string;
+  blockquoteLineHeight: string;
+  blockquoteMargin: string;
+  blockquoteBorderRadius: string;
+  blockquotePadding: string;
+  inlineCodeColor: string;
+  inlineCodeBackgroundColor: string;
+  inlineCodeFontSize: string;
+  inlineCodePadding: string;
+  inlineCodeBorderRadius: string;
+  codeColor: string;
+  codeBackgroundColor: string;
+  codeFontSize: string;
+  codeLineHeight: string;
+  codePadding: string;
+  codeMargin: string;
+  codeBorderRadius: string;
+}
+
 export interface RenderContext {
   app: App;
   file?: TFile | null;

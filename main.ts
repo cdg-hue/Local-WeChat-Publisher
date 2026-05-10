@@ -15,7 +15,8 @@ import { renderWechatArticle } from "./renderer";
 import { LocalWechatView, LOCAL_WECHAT_VIEW_TYPE } from "./view";
 import { copyWechatHtml } from "./clipboard";
 import type { RenderWechatArticleResult } from "./types";
-import { getBuiltInThemes } from "./theme";
+import { getBuiltInThemes, normalizeCustomStyle } from "./theme";
+import { StyleEditorModal } from "./style-editor-modal";
 
 export default class LocalWechatPlugin extends Plugin {
   settings: LocalWechatSettings = DEFAULT_SETTINGS;
@@ -77,6 +78,11 @@ export default class LocalWechatPlugin extends Plugin {
   async loadSettings(): Promise<void> {
     const loaded = await this.loadData();
     this.settings = Object.assign({}, DEFAULT_SETTINGS, loaded);
+    const normalizedStyle = normalizeCustomStyle(this.settings.customStyle);
+    if (JSON.stringify(this.settings.customStyle) !== JSON.stringify(normalizedStyle)) {
+      this.settings.customStyle = normalizedStyle;
+      await this.saveSettings();
+    }
   }
 
   async saveSettings(): Promise<void> {
@@ -438,33 +444,12 @@ class LocalWechatSettingTab extends PluginSettingTab {
     containerEl.createEl("h2", { text: "Local WeChat Publisher" });
 
     new Setting(containerEl)
-      .setName("默认主题")
-      .setDesc("用于右侧预览和导出的默认主题。")
-      .addDropdown((dropdown) => {
-        this.plugin.getAvailableThemes().forEach((theme) => {
-          dropdown.addOption(theme.id, theme.name);
+      .setName("样式编辑器")
+      .setDesc("管理公众号预设、自定义样式字段和实时预览。")
+      .addButton((button) => {
+        button.setButtonText("打开样式编辑器").setCta().onClick(() => {
+          new StyleEditorModal(this.app, this.plugin).open();
         });
-        dropdown
-          .setValue(this.plugin.settings.theme)
-          .onChange(async (value) => {
-            this.plugin.settings.theme = value;
-            await this.plugin.saveSettings();
-          });
-      });
-
-    new Setting(containerEl)
-      .setName("默认字号")
-      .setDesc("控制导出 HTML 的基础字号。")
-      .addDropdown((dropdown) => {
-        dropdown
-          .addOption("small", "小")
-          .addOption("medium", "中")
-          .addOption("large", "大")
-          .setValue(this.plugin.settings.fontSize)
-          .onChange(async (value) => {
-            this.plugin.settings.fontSize = value as LocalWechatSettings["fontSize"];
-            await this.plugin.saveSettings();
-          });
       });
 
     new Setting(containerEl)

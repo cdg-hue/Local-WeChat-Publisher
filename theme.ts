@@ -1,4 +1,4 @@
-import type { ElementStyles, FontSize, ThemeDefinition, ThemeTokens } from "./types";
+import type { CustomStyle, ElementStyles, ThemeDefinition } from "./types";
 
 const baseThemes: ThemeDefinition[] = [
   {
@@ -72,17 +72,6 @@ const baseThemes: ThemeDefinition[] = [
   },
 ];
 
-function fontSizeValue(size: FontSize): string {
-  switch (size) {
-    case "small":
-      return "15px";
-    case "large":
-      return "17px";
-    default:
-      return "16px";
-  }
-}
-
 function joinStyles(styles: Record<string, string | undefined>): string {
   return Object.entries(styles)
     .filter(([, value]) => Boolean(value))
@@ -98,103 +87,169 @@ export function getThemeById(themeId: string): ThemeDefinition {
   return baseThemes.find((theme) => theme.id === themeId) ?? baseThemes[0];
 }
 
-export function buildElementStyles(theme: ThemeDefinition, fontSize: FontSize): ElementStyles {
-  const tokens: ThemeTokens = {
-    ...theme.tokens,
-    fontSizeBase: fontSizeValue(fontSize),
+export function presetToCustomStyle(preset: ThemeDefinition): CustomStyle {
+  const { tokens } = preset;
+  return {
+    h1Color: tokens.colorHeading,
+    h1BackgroundColor: "",
+    h1Padding: "",
+    h1Center: false,
+    h2Color: tokens.colorHeading,
+    h2BackgroundColor: "",
+    h2Padding: "",
+    h2Center: false,
+    h3Color: tokens.colorHeading,
+    h3BackgroundColor: "",
+    h3Padding: "",
+    h3Center: false,
+    h4Color: tokens.colorHeading,
+    h4BackgroundColor: "",
+    h4Padding: "",
+    h4Center: false,
+    h5Color: tokens.colorHeading,
+    h5BackgroundColor: "",
+    h5Padding: "",
+    h5Center: false,
+    h6Color: tokens.colorHeading,
+    h6BackgroundColor: "",
+    h6Padding: "",
+    h6Center: false,
+    paragraphColor: tokens.colorText,
+    paragraphFontSize: tokens.fontSizeBase,
+    paragraphLineHeight: tokens.lineHeightBase,
+    paragraphMargin: `${tokens.spacingMd} 0`,
+    paragraphBackgroundColor: "",
+    paragraphPadding: "",
+    paragraphBorderRadius: "",
+    blockquoteBackgroundColor: tokens.colorQuoteBg,
+    blockquoteBorderColor: tokens.colorPrimary,
+    blockquoteColor: tokens.colorText,
+    blockquoteFontSize: tokens.fontSizeBase,
+    blockquoteLineHeight: tokens.lineHeightBase,
+    blockquoteMargin: `${tokens.spacingLg} 0`,
+    blockquoteBorderRadius: tokens.radiusSm,
+    blockquotePadding: `${tokens.spacingSm} ${tokens.spacingMd}`,
+    inlineCodeColor: tokens.colorPrimary,
+    inlineCodeBackgroundColor: tokens.colorCodeBg,
+    inlineCodeFontSize: "0.92em",
+    inlineCodePadding: "0.15em 0.35em",
+    inlineCodeBorderRadius: tokens.radiusSm,
+    codeColor: tokens.colorText,
+    codeBackgroundColor: tokens.colorCodeBg,
+    codeFontSize: "",
+    codeLineHeight: "1.6",
+    codePadding: tokens.spacingMd,
+    codeMargin: `${tokens.spacingLg} 0`,
+    codeBorderRadius: tokens.radiusMd,
   };
+}
 
+export function normalizeCustomStyle(style: Partial<CustomStyle> | null | undefined): CustomStyle {
+  return {
+    ...presetToCustomStyle(getThemeById("default")),
+    ...(style ?? {}),
+  };
+}
+
+export function buildElementStyles(style: CustomStyle): ElementStyles {
   return {
     article: joinStyles({
-      color: tokens.colorText,
-      "font-family": tokens.fontFamilyBase,
-      "font-size": tokens.fontSizeBase,
-      "line-height": tokens.lineHeightBase,
+      color: style.paragraphColor,
+      "font-family": "\"PingFang SC\", \"Helvetica Neue\", Arial, sans-serif",
+      "font-size": style.paragraphFontSize,
+      "line-height": style.paragraphLineHeight,
       "word-break": "break-word",
     }),
     p: joinStyles({
-      margin: `${tokens.spacingMd} 0`,
+      margin: style.paragraphMargin,
+      "background-color": style.paragraphBackgroundColor,
+      padding: style.paragraphPadding,
+      "border-radius": style.paragraphBorderRadius,
     }),
-    h1: headingStyle(tokens, "1.85em"),
-    h2: headingStyle(tokens, "1.55em"),
-    h3: headingStyle(tokens, "1.3em"),
-    h4: headingStyle(tokens, "1.15em"),
-    h5: headingStyle(tokens, "1.05em"),
-    h6: headingStyle(tokens, "1em"),
+    h1: headingStyle(style, "h1", "1.85em"),
+    h2: headingStyle(style, "h2", "1.55em"),
+    h3: headingStyle(style, "h3", "1.3em"),
+    h4: headingStyle(style, "h4", "1.15em"),
+    h5: headingStyle(style, "h5", "1.05em"),
+    h6: headingStyle(style, "h6", "1em"),
     blockquote: joinStyles({
-      margin: `${tokens.spacingLg} 0`,
-      padding: `${tokens.spacingSm} ${tokens.spacingMd}`,
-      "border-left": `4px solid ${tokens.colorPrimary}`,
-      background: tokens.colorQuoteBg,
-      color: tokens.colorText,
-      "border-radius": tokens.radiusSm,
+      margin: style.blockquoteMargin,
+      padding: style.blockquotePadding,
+      "border-left": style.blockquoteBorderColor ? `4px solid ${style.blockquoteBorderColor}` : undefined,
+      "background-color": style.blockquoteBackgroundColor,
+      color: style.blockquoteColor,
+      "font-size": style.blockquoteFontSize,
+      "line-height": style.blockquoteLineHeight,
+      "border-radius": style.blockquoteBorderRadius,
     }),
     ul: joinStyles({
-      margin: `${tokens.spacingMd} 0`,
+      margin: "16px 0",
       padding: "0 0 0 1.4em",
     }),
     ol: joinStyles({
-      margin: `${tokens.spacingMd} 0`,
+      margin: "16px 0",
       padding: "0 0 0 1.4em",
     }),
     li: joinStyles({
-      margin: `${tokens.spacingSm} 0`,
+      margin: "8px 0",
     }),
     a: joinStyles({
-      color: tokens.colorPrimary,
+      color: style.blockquoteBorderColor,
       "text-decoration": "none",
     }),
     img: joinStyles({
       display: "block",
       "max-width": "100%",
-      margin: `${tokens.spacingMd} auto`,
-      "border-radius": tokens.radiusSm,
+      margin: "16px auto",
+      "border-radius": "4px",
     }),
     figure: joinStyles({
-      margin: `${tokens.spacingLg} 0`,
+      margin: "24px 0",
     }),
     figcaption: joinStyles({
-      color: tokens.colorMuted,
+      color: "#6b7280",
       "font-size": "0.9em",
       "text-align": "center",
-      margin: `${tokens.spacingSm} 0 0`,
+      margin: "8px 0 0",
     }),
     table: joinStyles({
       width: "100%",
       "border-collapse": "collapse",
-      margin: `${tokens.spacingLg} 0`,
+      margin: "24px 0",
       "font-size": "0.95em",
     }),
     th: joinStyles({
-      border: `1px solid ${tokens.colorBorder}`,
-      padding: `${tokens.spacingSm} ${tokens.spacingMd}`,
-      background: tokens.colorQuoteBg,
+      border: "1px solid #d6d3d1",
+      padding: "8px 16px",
+      "background-color": style.blockquoteBackgroundColor,
       "text-align": "left",
     }),
     td: joinStyles({
-      border: `1px solid ${tokens.colorBorder}`,
-      padding: `${tokens.spacingSm} ${tokens.spacingMd}`,
+      border: "1px solid #d6d3d1",
+      padding: "8px 16px",
       "text-align": "left",
     }),
     hr: joinStyles({
       border: "none",
-      "border-top": `1px solid ${tokens.colorBorder}`,
-      margin: `${tokens.spacingLg} 0`,
+      "border-top": "1px solid #d6d3d1",
+      margin: "24px 0",
     }),
     pre: joinStyles({
-      background: tokens.colorCodeBg,
-      color: tokens.colorText,
-      padding: `${tokens.spacingMd}`,
-      "border-radius": tokens.radiusMd,
+      "background-color": style.codeBackgroundColor,
+      color: style.codeColor,
+      padding: style.codePadding,
+      "border-radius": style.codeBorderRadius,
+      "font-size": style.codeFontSize,
+      "line-height": style.codeLineHeight,
       overflow: "auto",
-      margin: `${tokens.spacingLg} 0`,
+      margin: style.codeMargin,
     }),
     codeInline: joinStyles({
-      background: tokens.colorCodeBg,
-      color: tokens.colorPrimary,
-      padding: "0.15em 0.35em",
-      "border-radius": tokens.radiusSm,
-      "font-size": "0.92em",
+      "background-color": style.inlineCodeBackgroundColor,
+      color: style.inlineCodeColor,
+      padding: style.inlineCodePadding,
+      "border-radius": style.inlineCodeBorderRadius,
+      "font-size": style.inlineCodeFontSize,
     }),
     codeBlock: joinStyles({
       background: "transparent",
@@ -202,30 +257,35 @@ export function buildElementStyles(theme: ThemeDefinition, fontSize: FontSize): 
       padding: "0",
     }),
     strong: joinStyles({
-      color: tokens.colorHeading,
+      color: style.h1Color,
       "font-weight": "700",
     }),
     em: joinStyles({
-      color: tokens.colorText,
+      color: style.paragraphColor,
     }),
     warning: joinStyles({
       color: "#9a3412",
       background: "#fff7ed",
       border: "1px solid #fdba74",
-      padding: `${tokens.spacingSm} ${tokens.spacingMd}`,
-      "border-radius": tokens.radiusSm,
-      margin: `${tokens.spacingMd} 0`,
+      padding: "8px 16px",
+      "border-radius": "4px",
+      margin: "16px 0",
     }),
   };
 }
 
-function headingStyle(tokens: ThemeTokens, size: string): string {
+type HeadingLevel = "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
+
+function headingStyle(style: CustomStyle, level: HeadingLevel, size: string): string {
   return joinStyles({
-    color: tokens.colorHeading,
-    "font-family": tokens.fontFamilyHeading,
+    color: style[`${level}Color`],
+    "background-color": style[`${level}BackgroundColor`],
+    padding: style[`${level}Padding`],
+    "text-align": style[`${level}Center`] ? "center" : undefined,
+    "font-family": "\"PingFang SC\", \"Helvetica Neue\", Arial, sans-serif",
     "font-size": size,
     "font-weight": "700",
-    margin: `${tokens.spacingLg} 0 ${tokens.spacingMd}`,
+    margin: "24px 0 16px",
     "line-height": "1.35",
   });
 }

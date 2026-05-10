@@ -18,6 +18,7 @@
   },
   "include": [
     "main.ts",
+    "style-editor-modal.ts",
     "view.ts",
     "settings.ts",
     "types.ts",

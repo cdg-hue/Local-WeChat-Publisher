@@ -226,7 +226,7 @@ __export(main_exports, {
   default: () => LocalWechatPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian3 = require("obsidian");
+var import_obsidian4 = require("obsidian");
 
 // settings.ts
 var DEFAULT_SETTINGS = {
@@ -234,7 +234,8 @@ var DEFAULT_SETTINGS = {
   fontSize: "medium",
   forceLineBreaks: false,
   exportSuffix: ".wechat.html",
-  openAfterExport: false
+  openAfterExport: false,
+  customStyle: {}
 };
 
 // normalize.ts
@@ -14000,16 +14001,6 @@ var baseThemes = [
     }
   }
 ];
-function fontSizeValue(size) {
-  switch (size) {
-    case "small":
-      return "15px";
-    case "large":
-      return "17px";
-    default:
-      return "16px";
-  }
-}
 function joinStyles(styles) {
   return Object.entries(styles).filter(([, value2]) => Boolean(value2)).map(([key2, value2]) => `${key2}: ${value2};`).join(" ");
 }
@@ -14020,102 +14011,167 @@ function getThemeById(themeId) {
   var _a;
   return (_a = baseThemes.find((theme) => theme.id === themeId)) != null ? _a : baseThemes[0];
 }
-function buildElementStyles(theme, fontSize) {
-  const tokens = {
-    ...theme.tokens,
-    fontSizeBase: fontSizeValue(fontSize)
+function presetToCustomStyle(preset) {
+  const { tokens } = preset;
+  return {
+    h1Color: tokens.colorHeading,
+    h1BackgroundColor: "",
+    h1Padding: "",
+    h1Center: false,
+    h2Color: tokens.colorHeading,
+    h2BackgroundColor: "",
+    h2Padding: "",
+    h2Center: false,
+    h3Color: tokens.colorHeading,
+    h3BackgroundColor: "",
+    h3Padding: "",
+    h3Center: false,
+    h4Color: tokens.colorHeading,
+    h4BackgroundColor: "",
+    h4Padding: "",
+    h4Center: false,
+    h5Color: tokens.colorHeading,
+    h5BackgroundColor: "",
+    h5Padding: "",
+    h5Center: false,
+    h6Color: tokens.colorHeading,
+    h6BackgroundColor: "",
+    h6Padding: "",
+    h6Center: false,
+    paragraphColor: tokens.colorText,
+    paragraphFontSize: tokens.fontSizeBase,
+    paragraphLineHeight: tokens.lineHeightBase,
+    paragraphMargin: `${tokens.spacingMd} 0`,
+    paragraphBackgroundColor: "",
+    paragraphPadding: "",
+    paragraphBorderRadius: "",
+    blockquoteBackgroundColor: tokens.colorQuoteBg,
+    blockquoteBorderColor: tokens.colorPrimary,
+    blockquoteColor: tokens.colorText,
+    blockquoteFontSize: tokens.fontSizeBase,
+    blockquoteLineHeight: tokens.lineHeightBase,
+    blockquoteMargin: `${tokens.spacingLg} 0`,
+    blockquoteBorderRadius: tokens.radiusSm,
+    blockquotePadding: `${tokens.spacingSm} ${tokens.spacingMd}`,
+    inlineCodeColor: tokens.colorPrimary,
+    inlineCodeBackgroundColor: tokens.colorCodeBg,
+    inlineCodeFontSize: "0.92em",
+    inlineCodePadding: "0.15em 0.35em",
+    inlineCodeBorderRadius: tokens.radiusSm,
+    codeColor: tokens.colorText,
+    codeBackgroundColor: tokens.colorCodeBg,
+    codeFontSize: "",
+    codeLineHeight: "1.6",
+    codePadding: tokens.spacingMd,
+    codeMargin: `${tokens.spacingLg} 0`,
+    codeBorderRadius: tokens.radiusMd
   };
+}
+function normalizeCustomStyle(style) {
+  return {
+    ...presetToCustomStyle(getThemeById("default")),
+    ...style != null ? style : {}
+  };
+}
+function buildElementStyles(style) {
   return {
     article: joinStyles({
-      color: tokens.colorText,
-      "font-family": tokens.fontFamilyBase,
-      "font-size": tokens.fontSizeBase,
-      "line-height": tokens.lineHeightBase,
+      color: style.paragraphColor,
+      "font-family": '"PingFang SC", "Helvetica Neue", Arial, sans-serif',
+      "font-size": style.paragraphFontSize,
+      "line-height": style.paragraphLineHeight,
       "word-break": "break-word"
     }),
     p: joinStyles({
-      margin: `${tokens.spacingMd} 0`
+      margin: style.paragraphMargin,
+      "background-color": style.paragraphBackgroundColor,
+      padding: style.paragraphPadding,
+      "border-radius": style.paragraphBorderRadius
     }),
-    h1: headingStyle(tokens, "1.85em"),
-    h2: headingStyle(tokens, "1.55em"),
-    h3: headingStyle(tokens, "1.3em"),
-    h4: headingStyle(tokens, "1.15em"),
-    h5: headingStyle(tokens, "1.05em"),
-    h6: headingStyle(tokens, "1em"),
+    h1: headingStyle(style, "h1", "1.85em"),
+    h2: headingStyle(style, "h2", "1.55em"),
+    h3: headingStyle(style, "h3", "1.3em"),
+    h4: headingStyle(style, "h4", "1.15em"),
+    h5: headingStyle(style, "h5", "1.05em"),
+    h6: headingStyle(style, "h6", "1em"),
     blockquote: joinStyles({
-      margin: `${tokens.spacingLg} 0`,
-      padding: `${tokens.spacingSm} ${tokens.spacingMd}`,
-      "border-left": `4px solid ${tokens.colorPrimary}`,
-      background: tokens.colorQuoteBg,
-      color: tokens.colorText,
-      "border-radius": tokens.radiusSm
+      margin: style.blockquoteMargin,
+      padding: style.blockquotePadding,
+      "border-left": style.blockquoteBorderColor ? `4px solid ${style.blockquoteBorderColor}` : void 0,
+      "background-color": style.blockquoteBackgroundColor,
+      color: style.blockquoteColor,
+      "font-size": style.blockquoteFontSize,
+      "line-height": style.blockquoteLineHeight,
+      "border-radius": style.blockquoteBorderRadius
     }),
     ul: joinStyles({
-      margin: `${tokens.spacingMd} 0`,
+      margin: "16px 0",
       padding: "0 0 0 1.4em"
     }),
     ol: joinStyles({
-      margin: `${tokens.spacingMd} 0`,
+      margin: "16px 0",
       padding: "0 0 0 1.4em"
     }),
     li: joinStyles({
-      margin: `${tokens.spacingSm} 0`
+      margin: "8px 0"
     }),
     a: joinStyles({
-      color: tokens.colorPrimary,
+      color: style.blockquoteBorderColor,
       "text-decoration": "none"
     }),
     img: joinStyles({
       display: "block",
       "max-width": "100%",
-      margin: `${tokens.spacingMd} auto`,
-      "border-radius": tokens.radiusSm
+      margin: "16px auto",
+      "border-radius": "4px"
     }),
     figure: joinStyles({
-      margin: `${tokens.spacingLg} 0`
+      margin: "24px 0"
     }),
     figcaption: joinStyles({
-      color: tokens.colorMuted,
+      color: "#6b7280",
       "font-size": "0.9em",
       "text-align": "center",
-      margin: `${tokens.spacingSm} 0 0`
+      margin: "8px 0 0"
     }),
     table: joinStyles({
       width: "100%",
       "border-collapse": "collapse",
-      margin: `${tokens.spacingLg} 0`,
+      margin: "24px 0",
       "font-size": "0.95em"
     }),
     th: joinStyles({
-      border: `1px solid ${tokens.colorBorder}`,
-      padding: `${tokens.spacingSm} ${tokens.spacingMd}`,
-      background: tokens.colorQuoteBg,
+      border: "1px solid #d6d3d1",
+      padding: "8px 16px",
+      "background-color": style.blockquoteBackgroundColor,
       "text-align": "left"
     }),
     td: joinStyles({
-      border: `1px solid ${tokens.colorBorder}`,
-      padding: `${tokens.spacingSm} ${tokens.spacingMd}`,
+      border: "1px solid #d6d3d1",
+      padding: "8px 16px",
       "text-align": "left"
     }),
     hr: joinStyles({
       border: "none",
-      "border-top": `1px solid ${tokens.colorBorder}`,
-      margin: `${tokens.spacingLg} 0`
+      "border-top": "1px solid #d6d3d1",
+      margin: "24px 0"
     }),
     pre: joinStyles({
-      background: tokens.colorCodeBg,
-      color: tokens.colorText,
-      padding: `${tokens.spacingMd}`,
-      "border-radius": tokens.radiusMd,
+      "background-color": style.codeBackgroundColor,
+      color: style.codeColor,
+      padding: style.codePadding,
+      "border-radius": style.codeBorderRadius,
+      "font-size": style.codeFontSize,
+      "line-height": style.codeLineHeight,
       overflow: "auto",
-      margin: `${tokens.spacingLg} 0`
+      margin: style.codeMargin
     }),
     codeInline: joinStyles({
-      background: tokens.colorCodeBg,
-      color: tokens.colorPrimary,
-      padding: "0.15em 0.35em",
-      "border-radius": tokens.radiusSm,
-      "font-size": "0.92em"
+      "background-color": style.inlineCodeBackgroundColor,
+      color: style.inlineCodeColor,
+      padding: style.inlineCodePadding,
+      "border-radius": style.inlineCodeBorderRadius,
+      "font-size": style.inlineCodeFontSize
     }),
     codeBlock: joinStyles({
       background: "transparent",
@@ -14123,36 +14179,39 @@ function buildElementStyles(theme, fontSize) {
       padding: "0"
     }),
     strong: joinStyles({
-      color: tokens.colorHeading,
+      color: style.h1Color,
       "font-weight": "700"
     }),
     em: joinStyles({
-      color: tokens.colorText
+      color: style.paragraphColor
     }),
     warning: joinStyles({
       color: "#9a3412",
       background: "#fff7ed",
       border: "1px solid #fdba74",
-      padding: `${tokens.spacingSm} ${tokens.spacingMd}`,
-      "border-radius": tokens.radiusSm,
-      margin: `${tokens.spacingMd} 0`
+      padding: "8px 16px",
+      "border-radius": "4px",
+      margin: "16px 0"
     })
   };
 }
-function headingStyle(tokens, size) {
+function headingStyle(style, level, size) {
   return joinStyles({
-    color: tokens.colorHeading,
-    "font-family": tokens.fontFamilyHeading,
+    color: style[`${level}Color`],
+    "background-color": style[`${level}BackgroundColor`],
+    padding: style[`${level}Padding`],
+    "text-align": style[`${level}Center`] ? "center" : void 0,
+    "font-family": '"PingFang SC", "Helvetica Neue", Arial, sans-serif',
     "font-size": size,
     "font-weight": "700",
-    margin: `${tokens.spacingLg} 0 ${tokens.spacingMd}`,
+    margin: "24px 0 16px",
     "line-height": "1.35"
   });
 }
 
 // render-preview.ts
 async function renderPreviewHtml(normalized, settings) {
-  const styles = buildElementStyles(getThemeById(settings.theme), settings.fontSize);
+  const styles = buildElementStyles(settings.customStyle);
   const assetMap = new Map(normalized.assets.map((asset) => [asset.id, asset]));
   const processor = unified().use(remarkParse).use(remarkFrontmatter).use(remarkGfm);
   if (settings.forceLineBreaks) {
@@ -14315,7 +14374,7 @@ function styleForTag(tagName, styles, parent) {
 
 // render-export.ts
 async function renderExportHtml(normalized, settings) {
-  const styles = buildElementStyles(getThemeById(settings.theme), settings.fontSize);
+  const styles = buildElementStyles(settings.customStyle);
   const assetMap = new Map(normalized.assets.map((asset) => [asset.id, asset]));
   const processor = unified().use(remarkParse).use(remarkFrontmatter).use(remarkGfm).use(remarkRehype).use(rehypeResolveExportAssets(assetMap, styles.warning)).use(rehypeTransformImagesToFigures2()).use(rehypeInlineStyles(styles)).use(rehypeStringify);
   const file = await processor.process(normalized.normalizedMarkdown);
@@ -14574,9 +14633,808 @@ async function renderWechatArticle(options) {
 }
 
 // view.ts
+var import_obsidian3 = require("obsidian");
+
+// style-editor-modal.ts
 var import_obsidian2 = require("obsidian");
+var CUSTOM_PRESET_VALUE = "custom";
+var SAMPLE_MARKDOWN = [
+  "# H1 \u6807\u9898\u793A\u4F8B",
+  "",
+  "\u8FD9\u662F\u4E00\u6BB5\u6B63\u6587\u5185\u5BB9\uFF0C\u7528\u6765\u89C2\u5BDF\u5B57\u53F7\u3001\u989C\u8272\u3001\u884C\u9AD8\u548C\u6BB5\u843D\u95F4\u8DDD\u3002\u8FD9\u91CC\u5305\u542B\u4E00\u6BB5 `inline code` \u4F5C\u4E3A\u884C\u5185\u4EE3\u7801\u793A\u4F8B\u3002",
+  "",
+  "## H2 \u6807\u9898\u793A\u4F8B",
+  "",
+  "> \u8FD9\u662F\u4E00\u6BB5\u5F15\u7528\u5757\u5185\u5BB9\uFF0C\u7528\u6765\u89C2\u5BDF\u80CC\u666F\u8272\u3001\u8FB9\u6846\u3001\u6587\u5B57\u989C\u8272\u3001\u5706\u89D2\u548C\u5185\u8FB9\u8DDD\u3002",
+  "",
+  "### H3 \u6807\u9898\u793A\u4F8B",
+  "",
+  "\u7B2C\u4E8C\u6BB5\u6B63\u6587\u7528\u4E8E\u786E\u8BA4\u8FDE\u7EED\u6BB5\u843D\u4E4B\u95F4\u7684\u8DDD\u79BB\u548C\u80CC\u666F\u8BBE\u7F6E\u3002",
+  "",
+  "```ts",
+  'const message = "Hello WeChat";',
+  "console.log(message);",
+  "```"
+].join("\n");
+var SAMPLE_NORMALIZED_DOCUMENT = {
+  markdown: SAMPLE_MARKDOWN,
+  normalizedMarkdown: SAMPLE_MARKDOWN,
+  assets: [],
+  warnings: []
+};
+var THEME_COLOR_COLUMNS = [
+  {
+    base: { label: "\u767D\u8272", value: "#ffffff" },
+    shades: [
+      { label: "\u7070 1", value: "#f3f4f6" },
+      { label: "\u7070 2", value: "#d1d5db" },
+      { label: "\u7070 3", value: "#9ca3af" },
+      { label: "\u7070 4", value: "#4b5563" },
+      { label: "\u7070 5", value: "#111827" }
+    ]
+  },
+  {
+    base: { label: "\u9ED1\u8272", value: "#000000" },
+    shades: [
+      { label: "\u9ED1 1", value: "#374151" },
+      { label: "\u9ED1 2", value: "#1f2937" },
+      { label: "\u9ED1 3", value: "#111827" },
+      { label: "\u9ED1 4", value: "#030712" },
+      { label: "\u9ED1 5", value: "#000000" }
+    ]
+  },
+  {
+    base: { label: "\u84DD\u7070", value: "#334155" },
+    shades: [
+      { label: "\u84DD\u7070 1", value: "#e2e8f0" },
+      { label: "\u84DD\u7070 2", value: "#cbd5e1" },
+      { label: "\u84DD\u7070 3", value: "#94a3b8" },
+      { label: "\u84DD\u7070 4", value: "#475569" },
+      { label: "\u84DD\u7070 5", value: "#0f172a" }
+    ]
+  },
+  {
+    base: { label: "\u5929\u84DD", value: "#0ea5e9" },
+    shades: [
+      { label: "\u5929\u84DD 1", value: "#e0f2fe" },
+      { label: "\u5929\u84DD 2", value: "#bae6fd" },
+      { label: "\u5929\u84DD 3", value: "#38bdf8" },
+      { label: "\u5929\u84DD 4", value: "#0284c7" },
+      { label: "\u5929\u84DD 5", value: "#075985" }
+    ]
+  },
+  {
+    base: { label: "\u6A59\u8272", value: "#ea580c" },
+    shades: [
+      { label: "\u6A59 1", value: "#ffedd5" },
+      { label: "\u6A59 2", value: "#fed7aa" },
+      { label: "\u6A59 3", value: "#fb923c" },
+      { label: "\u6A59 4", value: "#c2410c" },
+      { label: "\u6A59 5", value: "#7c2d12" }
+    ]
+  },
+  {
+    base: { label: "\u4E2D\u7070", value: "#52525b" },
+    shades: [
+      { label: "\u4E2D\u7070 1", value: "#f4f4f5" },
+      { label: "\u4E2D\u7070 2", value: "#d4d4d8" },
+      { label: "\u4E2D\u7070 3", value: "#a1a1aa" },
+      { label: "\u4E2D\u7070 4", value: "#3f3f46" },
+      { label: "\u4E2D\u7070 5", value: "#18181b" }
+    ]
+  },
+  {
+    base: { label: "\u9EC4\u8272", value: "#ca8a04" },
+    shades: [
+      { label: "\u9EC4 1", value: "#fef9c3" },
+      { label: "\u9EC4 2", value: "#fef08a" },
+      { label: "\u9EC4 3", value: "#facc15" },
+      { label: "\u9EC4 4", value: "#a16207" },
+      { label: "\u9EC4 5", value: "#713f12" }
+    ]
+  },
+  {
+    base: { label: "\u84DD\u8272", value: "#2563eb" },
+    shades: [
+      { label: "\u84DD 1", value: "#dbeafe" },
+      { label: "\u84DD 2", value: "#bfdbfe" },
+      { label: "\u84DD 3", value: "#60a5fa" },
+      { label: "\u84DD 4", value: "#1d4ed8" },
+      { label: "\u84DD 5", value: "#1e3a8a" }
+    ]
+  },
+  {
+    base: { label: "\u7EFF\u8272", value: "#16a34a" },
+    shades: [
+      { label: "\u7EFF 1", value: "#dcfce7" },
+      { label: "\u7EFF 2", value: "#bbf7d0" },
+      { label: "\u7EFF 3", value: "#4ade80" },
+      { label: "\u7EFF 4", value: "#15803d" },
+      { label: "\u7EFF 5", value: "#14532d" }
+    ]
+  }
+];
+var STANDARD_COLORS = [
+  { label: "\u6DF1\u7EA2", value: "#b91c1c" },
+  { label: "\u7EA2\u8272", value: "#dc2626" },
+  { label: "\u91D1\u8272", value: "#f59e0b" },
+  { label: "\u4EAE\u9EC4", value: "#d9f99d" },
+  { label: "\u8349\u7EFF", value: "#65a30d" },
+  { label: "\u7EFF\u8272", value: "#15803d" },
+  { label: "\u9752\u8272", value: "#0891b2" },
+  { label: "\u84DD\u8272", value: "#1d4ed8" },
+  { label: "\u6DF1\u84DD", value: "#111827" },
+  { label: "\u7D2B\u8272", value: "#581c87" }
+];
+var PADDING_OPTIONS = [
+  { label: "\u65E0", value: "" },
+  { label: "\u5C0F 4px 8px", value: "4px 8px" },
+  { label: "\u4E2D 8px 12px", value: "8px 12px" },
+  { label: "\u5927 12px 16px", value: "12px 16px" },
+  { label: "\u5BBD\u677E 16px 20px", value: "16px 20px" }
+];
+var MARGIN_OPTIONS = [
+  { label: "\u7D27\u51D1 8px 0", value: "8px 0" },
+  { label: "\u9ED8\u8BA4 16px 0", value: "16px 0" },
+  { label: "\u5BBD\u677E 24px 0", value: "24px 0" }
+];
+var RADIUS_OPTIONS = [
+  { label: "\u65E0", value: "" },
+  { label: "\u5C0F 4px", value: "4px" },
+  { label: "\u4E2D 8px", value: "8px" },
+  { label: "\u5927 12px", value: "12px" },
+  { label: "\u5706\u6DA6 16px", value: "16px" }
+];
+var PARAGRAPH_FONT_SIZE_OPTIONS = [
+  { label: "\u5C0F 15px", value: "15px" },
+  { label: "\u9ED8\u8BA4 16px", value: "16px" },
+  { label: "\u5927 17px", value: "17px" },
+  { label: "\u7279\u5927 18px", value: "18px" }
+];
+var CODE_FONT_SIZE_OPTIONS = [
+  { label: "\u7EE7\u627F", value: "" },
+  { label: "\u5C0F 13px", value: "13px" },
+  { label: "\u9ED8\u8BA4 14px", value: "14px" },
+  { label: "\u5927 15px", value: "15px" }
+];
+var LINE_HEIGHT_OPTIONS = [
+  { label: "\u7D27\u51D1 1.5", value: "1.5" },
+  { label: "\u9ED8\u8BA4 1.75", value: "1.75" },
+  { label: "\u8212\u9002 1.8", value: "1.8" },
+  { label: "\u5BBD\u677E 2", value: "2" }
+];
+var PARAGRAPH_FIELDS = [
+  {
+    key: "paragraphColor",
+    label: "\u6587\u5B57\u989C\u8272",
+    kind: "color",
+    placeholder: "#2a2a2a"
+  },
+  {
+    key: "paragraphFontSize",
+    label: "\u5B57\u53F7",
+    kind: "select",
+    placeholder: "16px",
+    options: PARAGRAPH_FONT_SIZE_OPTIONS
+  },
+  {
+    key: "paragraphLineHeight",
+    label: "\u884C\u9AD8",
+    kind: "select",
+    placeholder: "1.8",
+    options: LINE_HEIGHT_OPTIONS
+  },
+  {
+    key: "paragraphMargin",
+    label: "\u6BB5\u843D\u95F4\u8DDD",
+    kind: "select",
+    placeholder: "16px 0",
+    options: MARGIN_OPTIONS
+  },
+  {
+    key: "paragraphBackgroundColor",
+    label: "\u80CC\u666F\u8272",
+    kind: "color",
+    placeholder: "#f0f4ff"
+  },
+  {
+    key: "paragraphPadding",
+    label: "\u5185\u8FB9\u8DDD",
+    kind: "select",
+    placeholder: "8px 12px",
+    options: PADDING_OPTIONS
+  },
+  {
+    key: "paragraphBorderRadius",
+    label: "\u5706\u89D2",
+    kind: "select",
+    placeholder: "6px",
+    options: RADIUS_OPTIONS
+  }
+];
+var BLOCKQUOTE_FIELDS = [
+  {
+    key: "blockquoteBackgroundColor",
+    label: "\u80CC\u666F\u8272",
+    kind: "color",
+    placeholder: "#f7f7f5"
+  },
+  {
+    key: "blockquoteBorderColor",
+    label: "\u5DE6\u4FA7\u8FB9\u6846\u989C\u8272",
+    kind: "color",
+    placeholder: "#0f766e"
+  },
+  {
+    key: "blockquoteColor",
+    label: "\u6587\u5B57\u989C\u8272",
+    kind: "color",
+    placeholder: "#2a2a2a"
+  },
+  {
+    key: "blockquoteFontSize",
+    label: "\u5B57\u53F7",
+    kind: "select",
+    placeholder: "16px",
+    options: PARAGRAPH_FONT_SIZE_OPTIONS
+  },
+  {
+    key: "blockquoteLineHeight",
+    label: "\u884C\u9AD8",
+    kind: "select",
+    placeholder: "1.8",
+    options: LINE_HEIGHT_OPTIONS
+  },
+  {
+    key: "blockquoteMargin",
+    label: "\u5916\u8FB9\u8DDD",
+    kind: "select",
+    placeholder: "24px 0",
+    options: MARGIN_OPTIONS
+  },
+  {
+    key: "blockquoteBorderRadius",
+    label: "\u5706\u89D2",
+    kind: "select",
+    placeholder: "4px",
+    options: RADIUS_OPTIONS
+  },
+  {
+    key: "blockquotePadding",
+    label: "\u5185\u8FB9\u8DDD",
+    kind: "select",
+    placeholder: "8px 16px",
+    options: PADDING_OPTIONS
+  }
+];
+var INLINE_CODE_FIELDS = [
+  {
+    key: "inlineCodeColor",
+    label: "\u6587\u5B57\u989C\u8272",
+    kind: "color",
+    placeholder: "#0f766e"
+  },
+  {
+    key: "inlineCodeBackgroundColor",
+    label: "\u80CC\u666F\u8272",
+    kind: "color",
+    placeholder: "#f3f4f6"
+  },
+  {
+    key: "inlineCodeFontSize",
+    label: "\u5B57\u4F53\u5927\u5C0F",
+    kind: "select",
+    placeholder: "0.92em",
+    options: [
+      { label: "\u7EE7\u627F", value: "" },
+      { label: "\u504F\u5C0F 0.9em", value: "0.9em" },
+      { label: "\u9ED8\u8BA4 0.92em", value: "0.92em" },
+      { label: "\u7B49\u540C\u6B63\u6587 1em", value: "1em" }
+    ]
+  },
+  {
+    key: "inlineCodePadding",
+    label: "\u5185\u8FB9\u8DDD",
+    kind: "select",
+    placeholder: "0.15em 0.35em",
+    options: [
+      { label: "\u65E0", value: "" },
+      { label: "\u7D27\u51D1 0.1em 0.25em", value: "0.1em 0.25em" },
+      { label: "\u9ED8\u8BA4 0.15em 0.35em", value: "0.15em 0.35em" },
+      { label: "\u5BBD\u677E 0.2em 0.45em", value: "0.2em 0.45em" }
+    ]
+  },
+  {
+    key: "inlineCodeBorderRadius",
+    label: "\u5706\u89D2",
+    kind: "select",
+    placeholder: "4px",
+    options: RADIUS_OPTIONS
+  }
+];
+var CODE_FIELDS = [
+  {
+    key: "codeColor",
+    label: "\u6587\u5B57\u989C\u8272",
+    kind: "color",
+    placeholder: "#2a2a2a"
+  },
+  {
+    key: "codeBackgroundColor",
+    label: "\u80CC\u666F\u8272",
+    kind: "color",
+    placeholder: "#f3f4f6"
+  },
+  {
+    key: "codeFontSize",
+    label: "\u5B57\u4F53\u5927\u5C0F",
+    kind: "select",
+    placeholder: "14px",
+    options: CODE_FONT_SIZE_OPTIONS
+  },
+  {
+    key: "codeLineHeight",
+    label: "\u884C\u9AD8",
+    kind: "select",
+    placeholder: "1.6",
+    options: [
+      { label: "\u7D27\u51D1 1.4", value: "1.4" },
+      { label: "\u9ED8\u8BA4 1.6", value: "1.6" },
+      { label: "\u8212\u9002 1.8", value: "1.8" },
+      { label: "\u5BBD\u677E 2", value: "2" }
+    ]
+  },
+  {
+    key: "codePadding",
+    label: "\u5185\u8FB9\u8DDD",
+    kind: "select",
+    placeholder: "16px",
+    options: [
+      { label: "\u65E0", value: "" },
+      { label: "\u5C0F 8px", value: "8px" },
+      { label: "\u9ED8\u8BA4 16px", value: "16px" },
+      { label: "\u5BBD\u677E 20px", value: "20px" }
+    ]
+  },
+  {
+    key: "codeMargin",
+    label: "\u5916\u8FB9\u8DDD",
+    kind: "select",
+    placeholder: "24px 0",
+    options: MARGIN_OPTIONS
+  },
+  {
+    key: "codeBorderRadius",
+    label: "\u5706\u89D2",
+    kind: "select",
+    placeholder: "8px",
+    options: RADIUS_OPTIONS
+  }
+];
+var CUSTOM_STYLE_KEYS = [
+  "h1Color",
+  "h1BackgroundColor",
+  "h1Padding",
+  "h1Center",
+  "h2Color",
+  "h2BackgroundColor",
+  "h2Padding",
+  "h2Center",
+  "h3Color",
+  "h3BackgroundColor",
+  "h3Padding",
+  "h3Center",
+  "h4Color",
+  "h4BackgroundColor",
+  "h4Padding",
+  "h4Center",
+  "h5Color",
+  "h5BackgroundColor",
+  "h5Padding",
+  "h5Center",
+  "h6Color",
+  "h6BackgroundColor",
+  "h6Padding",
+  "h6Center",
+  "paragraphColor",
+  "paragraphFontSize",
+  "paragraphLineHeight",
+  "paragraphMargin",
+  "paragraphBackgroundColor",
+  "paragraphPadding",
+  "paragraphBorderRadius",
+  "blockquoteBackgroundColor",
+  "blockquoteBorderColor",
+  "blockquoteColor",
+  "blockquoteFontSize",
+  "blockquoteLineHeight",
+  "blockquoteMargin",
+  "blockquoteBorderRadius",
+  "blockquotePadding",
+  "inlineCodeColor",
+  "inlineCodeBackgroundColor",
+  "inlineCodeFontSize",
+  "inlineCodePadding",
+  "inlineCodeBorderRadius",
+  "codeColor",
+  "codeBackgroundColor",
+  "codeFontSize",
+  "codeLineHeight",
+  "codePadding",
+  "codeMargin",
+  "codeBorderRadius"
+];
+var StyleEditorModal = class extends import_obsidian2.Modal {
+  constructor(app, plugin) {
+    super(app);
+    this.debounceTimer = null;
+    this.previewVersion = 0;
+    this.plugin = plugin;
+  }
+  onOpen() {
+    this.buildDraft();
+    this.modalEl.addClass("wechat-style-editor");
+    this.contentEl.empty();
+    const headerEl = this.contentEl.createDiv({ cls: "wechat-style-editor-header" });
+    headerEl.createEl("h2", { text: "\u6837\u5F0F\u7F16\u8F91\u5668" });
+    this.renderPresetSelector(headerEl);
+    const bodyEl = this.contentEl.createDiv({ cls: "wechat-style-editor-body" });
+    this.fieldsEl = bodyEl.createDiv({ cls: "wechat-style-editor-fields" });
+    const previewWrap = bodyEl.createDiv({ cls: "wechat-style-editor-preview" });
+    this.previewEl = previewWrap.createDiv({ cls: "wechat-style-editor-preview-content" });
+    const footerEl = this.contentEl.createDiv({ cls: "wechat-style-editor-footer" });
+    new import_obsidian2.Setting(footerEl).addButton((button) => {
+      button.setButtonText("\u53D6\u6D88").onClick(() => this.close());
+    }).addButton((button) => {
+      button.setButtonText("\u4FDD\u5B58").setCta().onClick(() => {
+        void this.saveAndClose();
+      });
+    });
+    this.renderAllFields();
+    this.updatePresetDropdown();
+    void this.refreshPreview();
+  }
+  onClose() {
+    if (this.debounceTimer !== null) {
+      window.clearTimeout(this.debounceTimer);
+      this.debounceTimer = null;
+    }
+    this.contentEl.empty();
+  }
+  buildDraft() {
+    this.draft = { ...this.plugin.settings.customStyle };
+  }
+  renderPresetSelector(containerEl) {
+    new import_obsidian2.Setting(containerEl).setName("\u9884\u8BBE").setDesc("\u9009\u62E9\u5185\u7F6E\u9884\u8BBE\u4F1A\u8986\u76D6\u5F53\u524D\u8349\u7A3F\u5B57\u6BB5\uFF0C\u4FDD\u5B58\u524D\u4E0D\u4F1A\u5199\u5165\u8BBE\u7F6E\u3002").addDropdown((dropdown) => {
+      this.presetDropdown = dropdown;
+      dropdown.addOption(CUSTOM_PRESET_VALUE, "\u81EA\u5B9A\u4E49");
+      getBuiltInThemes().forEach((theme) => {
+        dropdown.addOption(theme.id, theme.name);
+      });
+      dropdown.onChange((value2) => {
+        if (value2 === CUSTOM_PRESET_VALUE) {
+          this.updatePresetDropdown();
+          return;
+        }
+        this.draft = presetToCustomStyle(getThemeById(value2));
+        this.renderAllFields();
+        this.updatePresetDropdown();
+        this.schedulePreviewRefresh();
+      });
+    });
+  }
+  renderAllFields() {
+    this.fieldsEl.empty();
+    const headingsEl = this.createSection("\u6807\u9898\u6837\u5F0F");
+    for (let level = 1; level <= 6; level += 1) {
+      const levelEl = headingsEl.createDiv({ cls: "wechat-style-editor-heading-level" });
+      levelEl.createDiv({ cls: "wechat-style-editor-heading-level-title", text: `H${level}` });
+      this.renderFieldGroup(levelEl, [
+        {
+          key: `h${level}Color`,
+          label: `H${level} \u6587\u5B57\u989C\u8272`,
+          kind: "color",
+          placeholder: "#111827"
+        },
+        {
+          key: `h${level}BackgroundColor`,
+          label: `H${level} \u80CC\u666F\u8272`,
+          kind: "color",
+          placeholder: "#f0f4ff"
+        },
+        {
+          key: `h${level}Padding`,
+          label: `H${level} \u5185\u8FB9\u8DDD`,
+          kind: "select",
+          placeholder: "8px 12px",
+          options: PADDING_OPTIONS
+        },
+        {
+          key: `h${level}Center`,
+          label: `H${level} \u5C45\u4E2D`,
+          kind: "toggle"
+        }
+      ]);
+    }
+    this.renderFieldGroup(this.createSection("\u6B63\u6587\u6BB5\u843D"), PARAGRAPH_FIELDS);
+    this.renderFieldGroup(this.createSection("\u5F15\u7528\u5757"), BLOCKQUOTE_FIELDS);
+    this.renderFieldGroup(this.createSection("\u884C\u5185\u4EE3\u7801"), INLINE_CODE_FIELDS);
+    this.renderFieldGroup(this.createSection("\u4EE3\u7801\u5757"), CODE_FIELDS);
+  }
+  createSection(title) {
+    const sectionEl = this.fieldsEl.createDiv({ cls: "wechat-style-editor-section" });
+    sectionEl.createDiv({ cls: "wechat-style-editor-section-title", text: title });
+    return sectionEl;
+  }
+  renderFieldGroup(containerEl, fields) {
+    fields.forEach((field) => {
+      const setting = new import_obsidian2.Setting(containerEl).setName(field.label);
+      if (field.kind === "toggle") {
+        setting.addToggle((toggle) => {
+          toggle.setValue(Boolean(this.draft[field.key])).onChange((value2) => {
+            this.setDraftField(field.key, value2);
+            this.updatePresetDropdown();
+            this.schedulePreviewRefresh();
+          });
+        });
+        return;
+      }
+      if (field.kind === "color") {
+        this.renderColorControl(setting, field);
+        return;
+      }
+      this.renderSelectControl(setting, field);
+    });
+  }
+  renderColorControl(setting, field) {
+    var _a, _b;
+    const controlEl = setting.controlEl.createDiv({ cls: "wechat-style-editor-color-control" });
+    const triggerEl = controlEl.createEl("button", {
+      cls: "wechat-style-editor-color-trigger",
+      attr: {
+        type: "button"
+      }
+    });
+    const previewEl = triggerEl.createSpan({ cls: "wechat-style-editor-color-preview" });
+    const valueEl = triggerEl.createSpan({ cls: "wechat-style-editor-color-value" });
+    triggerEl.createSpan({ cls: "wechat-style-editor-color-arrow", text: "\u2304" });
+    const panelEl = controlEl.createDiv({ cls: "wechat-style-editor-color-panel" });
+    panelEl.hide();
+    const themeTitleEl = panelEl.createDiv({
+      cls: "wechat-style-editor-color-panel-title",
+      text: "\u4E3B\u9898\u989C\u8272"
+    });
+    const themeGridEl = panelEl.createDiv({ cls: "wechat-style-editor-theme-colors" });
+    const swatchButtons = [];
+    THEME_COLOR_COLUMNS.forEach((column) => {
+      const columnEl = themeGridEl.createDiv({ cls: "wechat-style-editor-theme-color-column" });
+      swatchButtons.push(this.createColorSwatchButton(columnEl, column.base, "theme-base"));
+      column.shades.forEach((shade) => {
+        swatchButtons.push(this.createColorSwatchButton(columnEl, shade, "theme-shade"));
+      });
+    });
+    panelEl.createDiv({
+      cls: "wechat-style-editor-color-panel-title",
+      text: "\u6807\u51C6\u989C\u8272"
+    });
+    const standardGridEl = panelEl.createDiv({ cls: "wechat-style-editor-standard-colors" });
+    STANDARD_COLORS.forEach((swatch) => {
+      swatchButtons.push(this.createColorSwatchButton(standardGridEl, swatch, "standard"));
+    });
+    const actionsEl = panelEl.createDiv({ cls: "wechat-style-editor-color-actions" });
+    const noColorButton = actionsEl.createEl("button", {
+      cls: "wechat-style-editor-color-action",
+      text: "\u65E0\u989C\u8272",
+      attr: { type: "button" }
+    });
+    const moreColorButton = actionsEl.createEl("button", {
+      cls: "wechat-style-editor-color-action",
+      text: "\u66F4\u591A\u989C\u8272...",
+      attr: { type: "button" }
+    });
+    const eyedropperButton = actionsEl.createEl("button", {
+      cls: "wechat-style-editor-color-action",
+      text: "\u53D6\u8272\u5668",
+      attr: { type: "button" }
+    });
+    const customEl = panelEl.createDiv({ cls: "wechat-style-editor-color-custom" });
+    const pickerEl = customEl.createEl("input", {
+      cls: "wechat-style-editor-color-picker",
+      attr: {
+        type: "color"
+      }
+    });
+    const textEl = customEl.createEl("input", {
+      cls: "wechat-style-editor-value-input",
+      attr: {
+        type: "text",
+        placeholder: (_a = field.placeholder) != null ? _a : "#000000"
+      }
+    });
+    const syncFromValue = (value2) => {
+      const normalized = value2.trim();
+      textEl.value = value2;
+      const isHex = isHexColor(normalized);
+      pickerEl.value = isHex ? normalizeHexColor(normalized) : "#000000";
+      previewEl.style.backgroundColor = isHex ? normalized : "transparent";
+      previewEl.toggleClass("wechat-style-editor-color-preview-empty", !normalized || !isHex);
+      valueEl.textContent = normalized || "\u65E0\u989C\u8272";
+      noColorButton.toggleClass("is-active", normalized === "");
+      swatchButtons.forEach(({ button, value: value3 }) => {
+        button.toggleClass("is-active", normalizeHexColor(value3) === normalizeHexColor(normalized));
+      });
+    };
+    const commitValue = (value2) => {
+      this.setDraftField(field.key, value2);
+      syncFromValue(value2);
+      this.updatePresetDropdown();
+      this.schedulePreviewRefresh();
+    };
+    triggerEl.addEventListener("click", (event) => {
+      event.preventDefault();
+      if (panelEl.style.display === "none") {
+        panelEl.show();
+        return;
+      }
+      panelEl.hide();
+    });
+    noColorButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      commitValue("");
+    });
+    moreColorButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      pickerEl.click();
+    });
+    eyedropperButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      void this.pickScreenColor(commitValue);
+    });
+    swatchButtons.forEach(({ button, value: value2 }) => {
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        commitValue(value2);
+      });
+    });
+    pickerEl.addEventListener("input", () => {
+      commitValue(pickerEl.value);
+    });
+    textEl.addEventListener("input", () => {
+      commitValue(textEl.value);
+    });
+    syncFromValue(String((_b = this.draft[field.key]) != null ? _b : ""));
+  }
+  createColorSwatchButton(containerEl, swatch, variant) {
+    const button = containerEl.createEl("button", {
+      cls: `wechat-style-editor-color-swatch wechat-style-editor-color-swatch-${variant}`,
+      attr: {
+        type: "button",
+        title: `${swatch.label} ${swatch.value}`
+      }
+    });
+    button.style.backgroundColor = swatch.value;
+    return { button, value: swatch.value };
+  }
+  async pickScreenColor(commitValue) {
+    const EyeDropperCtor = window.EyeDropper;
+    if (!EyeDropperCtor) {
+      return;
+    }
+    const result = await new EyeDropperCtor().open();
+    commitValue(result.sRGBHex);
+  }
+  renderSelectControl(setting, field) {
+    var _a, _b, _c;
+    const options = (_a = field.options) != null ? _a : [];
+    const customValue = "__custom__";
+    const controlEl = setting.controlEl.createDiv({ cls: "wechat-style-editor-select-control" });
+    const selectEl = controlEl.createEl("select", {
+      cls: "wechat-style-editor-value-select"
+    });
+    const textEl = controlEl.createEl("input", {
+      cls: "wechat-style-editor-value-input",
+      attr: {
+        type: "text",
+        placeholder: (_b = field.placeholder) != null ? _b : ""
+      }
+    });
+    const clearButton = controlEl.createEl("button", {
+      cls: "wechat-style-editor-clear-button",
+      text: "\u6E05\u7A7A"
+    });
+    options.forEach((option2) => {
+      selectEl.createEl("option", {
+        text: option2.label,
+        value: option2.value
+      });
+    });
+    selectEl.createEl("option", {
+      text: "\u81EA\u5B9A\u4E49",
+      value: customValue
+    });
+    const syncFromValue = (value2) => {
+      textEl.value = value2;
+      selectEl.value = options.some((option2) => option2.value === value2) ? value2 : customValue;
+    };
+    const commitValue = (value2) => {
+      this.setDraftField(field.key, value2);
+      syncFromValue(value2);
+      this.updatePresetDropdown();
+      this.schedulePreviewRefresh();
+    };
+    selectEl.addEventListener("change", () => {
+      if (selectEl.value === customValue) {
+        return;
+      }
+      commitValue(selectEl.value);
+    });
+    textEl.addEventListener("input", () => {
+      commitValue(textEl.value);
+    });
+    clearButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      commitValue("");
+    });
+    syncFromValue(String((_c = this.draft[field.key]) != null ? _c : ""));
+  }
+  setDraftField(field, value2) {
+    const draft = this.draft;
+    draft[field] = value2;
+  }
+  detectPresetMatch() {
+    for (const preset of getBuiltInThemes()) {
+      const presetStyle = presetToCustomStyle(preset);
+      const matches = CUSTOM_STYLE_KEYS.every((key2) => this.draft[key2] === presetStyle[key2]);
+      if (matches) {
+        return preset.id;
+      }
+    }
+    return CUSTOM_PRESET_VALUE;
+  }
+  updatePresetDropdown() {
+    this.presetDropdown.setValue(this.detectPresetMatch());
+  }
+  schedulePreviewRefresh() {
+    if (this.debounceTimer !== null) {
+      window.clearTimeout(this.debounceTimer);
+    }
+    this.debounceTimer = window.setTimeout(() => {
+      void this.refreshPreview();
+    }, 200);
+  }
+  async refreshPreview() {
+    const version = this.previewVersion + 1;
+    this.previewVersion = version;
+    const result = await renderPreviewHtml(SAMPLE_NORMALIZED_DOCUMENT, {
+      ...this.plugin.settings,
+      customStyle: this.draft
+    });
+    if (version !== this.previewVersion) {
+      return;
+    }
+    this.previewEl.innerHTML = result.html;
+  }
+  async saveAndClose() {
+    this.plugin.settings.customStyle = { ...this.draft };
+    await this.plugin.saveSettings();
+    this.close();
+  }
+};
+function isHexColor(value2) {
+  return /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(value2.trim());
+}
+function normalizeHexColor(value2) {
+  const trimmed = value2.trim();
+  if (/^#[0-9a-fA-F]{3}$/.test(trimmed)) {
+    const [, r, g, b] = trimmed;
+    return `#${r}${r}${g}${g}${b}${b}`.toLowerCase();
+  }
+  return trimmed.toLowerCase();
+}
+
+// view.ts
 var LOCAL_WECHAT_VIEW_TYPE = "local-wechat-preview-view";
-var LocalWechatView = class extends import_obsidian2.ItemView {
+var LocalWechatView = class extends import_obsidian3.ItemView {
   constructor(leaf, plugin) {
     super(leaf);
     this.currentMarkdown = "";
@@ -14621,28 +15479,12 @@ var LocalWechatView = class extends import_obsidian2.ItemView {
   }
   renderToolbar() {
     this.toolbarEl.empty();
-    const controlWrap = this.toolbarEl.createDiv({ cls: "wechat-plugin-toolbar-controls" });
     const actionsWrap = this.toolbarEl.createDiv({ cls: "wechat-plugin-toolbar-actions" });
-    const themeSetting = new import_obsidian2.Setting(controlWrap);
-    themeSetting.setName("\u4E3B\u9898");
-    themeSetting.addDropdown((dropdown) => {
-      this.plugin.getAvailableThemes().forEach((theme) => {
-        dropdown.addOption(theme.id, theme.name);
-      });
-      dropdown.setValue(this.plugin.settings.theme).onChange(async (value2) => {
-        this.plugin.settings.theme = value2;
-        await this.plugin.saveSettings();
-        await this.plugin.openPreviewForCurrentFile();
-      });
+    const styleButton = actionsWrap.createEl("button", {
+      text: "\u6837\u5F0F\u7F16\u8F91"
     });
-    const fontSetting = new import_obsidian2.Setting(controlWrap);
-    fontSetting.setName("\u5B57\u53F7");
-    fontSetting.addDropdown((dropdown) => {
-      dropdown.addOption("small", "\u5C0F").addOption("medium", "\u4E2D").addOption("large", "\u5927").setValue(this.plugin.settings.fontSize).onChange(async (value2) => {
-        this.plugin.settings.fontSize = value2;
-        await this.plugin.saveSettings();
-        await this.plugin.openPreviewForCurrentFile();
-      });
+    styleButton.addEventListener("click", () => {
+      new StyleEditorModal(this.app, this.plugin).open();
     });
     const refreshButton = actionsWrap.createEl("button", {
       cls: "mod-cta",
@@ -14827,7 +15669,7 @@ async function copyWechatHtml(params) {
 }
 
 // main.ts
-var LocalWechatPlugin = class extends import_obsidian3.Plugin {
+var LocalWechatPlugin = class extends import_obsidian4.Plugin {
   constructor() {
     super(...arguments);
     this.settings = DEFAULT_SETTINGS;
@@ -14849,7 +15691,7 @@ var LocalWechatPlugin = class extends import_obsidian3.Plugin {
     );
     this.registerEvent(
       this.app.workspace.on("file-open", (file) => {
-        if (file instanceof import_obsidian3.TFile && isMarkdownFile2(file)) {
+        if (file instanceof import_obsidian4.TFile && isMarkdownFile2(file)) {
           this.lastMarkdownFilePath = file.path;
         }
       })
@@ -14880,6 +15722,11 @@ var LocalWechatPlugin = class extends import_obsidian3.Plugin {
   async loadSettings() {
     const loaded = await this.loadData();
     this.settings = Object.assign({}, DEFAULT_SETTINGS, loaded);
+    const normalizedStyle = normalizeCustomStyle(this.settings.customStyle);
+    if (JSON.stringify(this.settings.customStyle) !== JSON.stringify(normalizedStyle)) {
+      this.settings.customStyle = normalizedStyle;
+      await this.saveSettings();
+    }
   }
   async saveSettings() {
     await this.saveData(this.settings);
@@ -14887,25 +15734,25 @@ var LocalWechatPlugin = class extends import_obsidian3.Plugin {
   async openPreviewForCurrentFile(preferredFilePath) {
     const source = await this.getCurrentMarkdownSource(preferredFilePath);
     if (!source) {
-      new import_obsidian3.Notice("\u8BF7\u5148\u6253\u5F00\u4E00\u4E2A Markdown \u6587\u4EF6\u3002");
+      new import_obsidian4.Notice("\u8BF7\u5148\u6253\u5F00\u4E00\u4E2A Markdown \u6587\u4EF6\u3002");
       return;
     }
     if (!source.markdown.trim()) {
-      new import_obsidian3.Notice("\u5F53\u524D\u6587\u4EF6\u6CA1\u6709\u5185\u5BB9\u3002");
+      new import_obsidian4.Notice("\u5F53\u524D\u6587\u4EF6\u6CA1\u6709\u5185\u5BB9\u3002");
       return;
     }
     const result = await this.renderMarkdown(source.markdown, source.file);
     await this.showResult(result, source.markdown, source.file);
-    new import_obsidian3.Notice("\u5DF2\u6253\u5F00\u516C\u4F17\u53F7\u9884\u89C8\uFF0C\u672A\u6267\u884C\u590D\u5236\u3002");
+    new import_obsidian4.Notice("\u5DF2\u6253\u5F00\u516C\u4F17\u53F7\u9884\u89C8\uFF0C\u672A\u6267\u884C\u590D\u5236\u3002");
   }
   async copyCurrentNoteHtml(preferredFilePath) {
     const source = await this.getCurrentMarkdownSource(preferredFilePath);
     if (!source) {
-      new import_obsidian3.Notice("\u8BF7\u5148\u6253\u5F00\u4E00\u4E2A Markdown \u6587\u4EF6\u3002");
+      new import_obsidian4.Notice("\u8BF7\u5148\u6253\u5F00\u4E00\u4E2A Markdown \u6587\u4EF6\u3002");
       return;
     }
     if (!source.markdown.trim()) {
-      new import_obsidian3.Notice("\u5F53\u524D\u6587\u4EF6\u6CA1\u6709\u5185\u5BB9\u3002");
+      new import_obsidian4.Notice("\u5F53\u524D\u6587\u4EF6\u6CA1\u6709\u5185\u5BB9\u3002");
       return;
     }
     const result = await this.renderMarkdown(source.markdown, source.file);
@@ -14925,7 +15772,7 @@ var LocalWechatPlugin = class extends import_obsidian3.Plugin {
         tone: "error",
         message: `\u590D\u5236\u5931\u8D25\uFF1A${error instanceof Error ? error.message : String(error)}`
       });
-      new import_obsidian3.Notice(`\u590D\u5236\u5931\u8D25: ${error instanceof Error ? error.message : String(error)}`);
+      new import_obsidian4.Notice(`\u590D\u5236\u5931\u8D25: ${error instanceof Error ? error.message : String(error)}`);
       return;
     }
     if (copyResult.mode === "plain-text") {
@@ -14933,7 +15780,7 @@ var LocalWechatPlugin = class extends import_obsidian3.Plugin {
         tone: "plain",
         message: "\u5F53\u524D\u73AF\u5883\u53EA\u590D\u5236\u4E86\u7EAF\u6587\u672C\uFF0C\u4E0D\u80FD\u76F4\u63A5\u7528\u4E8E\u516C\u4F17\u53F7\u5BCC\u6587\u672C\u7C98\u8D34\u3002"
       });
-      new import_obsidian3.Notice("\u5F53\u524D\u73AF\u5883\u53EA\u590D\u5236\u4E86\u7EAF\u6587\u672C\uFF0C\u4E0D\u80FD\u76F4\u63A5\u7528\u4E8E\u516C\u4F17\u53F7\u5BCC\u6587\u672C\u7C98\u8D34\u3002", 5e3);
+      new import_obsidian4.Notice("\u5F53\u524D\u73AF\u5883\u53EA\u590D\u5236\u4E86\u7EAF\u6587\u672C\uFF0C\u4E0D\u80FD\u76F4\u63A5\u7528\u4E8E\u516C\u4F17\u53F7\u5BCC\u6587\u672C\u7C98\u8D34\u3002", 5e3);
       return;
     }
     if (warnings.length > 0) {
@@ -14941,30 +15788,30 @@ var LocalWechatPlugin = class extends import_obsidian3.Plugin {
         tone: "warning",
         message: `\u5DF2\u590D\u5236\u516C\u4F17\u53F7 HTML\uFF0C\u4F46\u4ECD\u6709 ${warnings.length} \u9879\u98CE\u9669\uFF0C\u7C98\u8D34\u524D\u8BF7\u5148\u67E5\u770B\u4E0B\u9762\u7684\u53D1\u5E03\u524D\u68C0\u67E5\u3002`
       });
-      new import_obsidian3.Notice(`\u5DF2\u590D\u5236\u516C\u4F17\u53F7 HTML\u3002\u5F53\u524D\u4ECD\u6709 ${warnings.length} \u9879\u98CE\u9669\uFF0C\u8BF7\u5728\u53F3\u4FA7\u68C0\u67E5\u9762\u677F\u786E\u8BA4\u3002`, 5e3);
+      new import_obsidian4.Notice(`\u5DF2\u590D\u5236\u516C\u4F17\u53F7 HTML\u3002\u5F53\u524D\u4ECD\u6709 ${warnings.length} \u9879\u98CE\u9669\uFF0C\u8BF7\u5728\u53F3\u4FA7\u68C0\u67E5\u9762\u677F\u786E\u8BA4\u3002`, 5e3);
     } else {
       previewView == null ? void 0 : previewView.setCopyStatus({
         tone: "success",
         message: "\u5DF2\u590D\u5236\u516C\u4F17\u53F7 HTML\uFF0C\u53EF\u76F4\u63A5\u7C98\u8D34\u5230\u516C\u4F17\u53F7\u5199\u4F5C\u533A\u57DF\u3002"
       });
-      new import_obsidian3.Notice("\u5DF2\u590D\u5236\u516C\u4F17\u53F7 HTML\uFF0C\u53EF\u76F4\u63A5\u7C98\u8D34\u5230\u516C\u4F17\u53F7\u5199\u4F5C\u533A\u57DF\u3002");
+      new import_obsidian4.Notice("\u5DF2\u590D\u5236\u516C\u4F17\u53F7 HTML\uFF0C\u53EF\u76F4\u63A5\u7C98\u8D34\u5230\u516C\u4F17\u53F7\u5199\u4F5C\u533A\u57DF\u3002");
     }
   }
   async exportCurrentNoteHtml(preferredFilePath) {
     const source = await this.getCurrentMarkdownSource(preferredFilePath);
     if (!source) {
-      new import_obsidian3.Notice("\u8BF7\u5148\u6253\u5F00\u4E00\u4E2A Markdown \u6587\u4EF6\u3002");
+      new import_obsidian4.Notice("\u8BF7\u5148\u6253\u5F00\u4E00\u4E2A Markdown \u6587\u4EF6\u3002");
       return;
     }
     if (!source.markdown.trim()) {
-      new import_obsidian3.Notice("\u5F53\u524D\u6587\u4EF6\u6CA1\u6709\u5185\u5BB9\u3002");
+      new import_obsidian4.Notice("\u5F53\u524D\u6587\u4EF6\u6CA1\u6709\u5185\u5BB9\u3002");
       return;
     }
     const result = await this.renderMarkdown(source.markdown, source.file);
     const exportPath = await this.exportHtmlFile(result.exportResult.html, source.file);
     await this.openExportedFileIfNeeded(exportPath);
     await this.showResult(result, source.markdown, source.file);
-    new import_obsidian3.Notice(`HTML \u5DF2\u5BFC\u51FA\u5230 ${exportPath}`);
+    new import_obsidian4.Notice(`HTML \u5DF2\u5BFC\u51FA\u5230 ${exportPath}`);
   }
   async renderMarkdown(markdown, file) {
     return renderWechatArticle({
@@ -15003,11 +15850,11 @@ var LocalWechatPlugin = class extends import_obsidian3.Plugin {
       return null;
     }
     const file = this.app.vault.getAbstractFileByPath(path2);
-    return file instanceof import_obsidian3.TFile ? file : null;
+    return file instanceof import_obsidian4.TFile ? file : null;
   }
   async getCurrentMarkdownSource(preferredFilePath) {
     var _a, _b, _c;
-    const activeMarkdownView = this.app.workspace.getActiveViewOfType(import_obsidian3.MarkdownView);
+    const activeMarkdownView = this.app.workspace.getActiveViewOfType(import_obsidian4.MarkdownView);
     if (activeMarkdownView) {
       if (activeMarkdownView.file && isMarkdownFile2(activeMarkdownView.file)) {
         this.lastMarkdownFilePath = activeMarkdownView.file.path;
@@ -15068,7 +15915,7 @@ var LocalWechatPlugin = class extends import_obsidian3.Plugin {
     return null;
   }
   rememberCurrentMarkdownFile() {
-    const activeMarkdownView = this.app.workspace.getActiveViewOfType(import_obsidian3.MarkdownView);
+    const activeMarkdownView = this.app.workspace.getActiveViewOfType(import_obsidian4.MarkdownView);
     if ((activeMarkdownView == null ? void 0 : activeMarkdownView.file) && isMarkdownFile2(activeMarkdownView.file)) {
       this.lastMarkdownFilePath = activeMarkdownView.file.path;
       return;
@@ -15092,7 +15939,7 @@ var LocalWechatPlugin = class extends import_obsidian3.Plugin {
   findMarkdownViews() {
     const views = [];
     this.app.workspace.iterateAllLeaves((leaf) => {
-      if (leaf.view instanceof import_obsidian3.MarkdownView) {
+      if (leaf.view instanceof import_obsidian4.MarkdownView) {
         views.push(leaf.view);
       }
     });
@@ -15102,7 +15949,7 @@ var LocalWechatPlugin = class extends import_obsidian3.Plugin {
     const exportPath = this.buildExportPath(file);
     const existing = this.app.vault.getAbstractFileByPath(exportPath);
     const documentHtml = this.buildExportDocument(html7, file);
-    if (existing instanceof import_obsidian3.TFile) {
+    if (existing instanceof import_obsidian4.TFile) {
       await this.app.vault.modify(existing, documentHtml);
       return exportPath;
     }
@@ -15110,7 +15957,7 @@ var LocalWechatPlugin = class extends import_obsidian3.Plugin {
     return exportPath;
   }
   async openExportedFileIfNeeded(exportPath) {
-    if (!this.settings.openAfterExport || !import_obsidian3.Platform.isDesktopApp) {
+    if (!this.settings.openAfterExport || !import_obsidian4.Platform.isDesktopApp) {
       return;
     }
     const file = this.resolveFileByPath(exportPath);
@@ -15124,9 +15971,9 @@ var LocalWechatPlugin = class extends import_obsidian3.Plugin {
     const suffix = this.normalizeExportSuffix(this.settings.exportSuffix);
     if (file) {
       const filePathWithoutExt = file.path.replace(/\.[^/.]+$/, "");
-      return (0, import_obsidian3.normalizePath)(`${filePathWithoutExt}${suffix}`);
+      return (0, import_obsidian4.normalizePath)(`${filePathWithoutExt}${suffix}`);
     }
-    return (0, import_obsidian3.normalizePath)(`wechat-export-${Date.now()}${suffix}`);
+    return (0, import_obsidian4.normalizePath)(`wechat-export-${Date.now()}${suffix}`);
   }
   normalizeExportSuffix(suffix) {
     const trimmed = suffix.trim() || ".wechat.html";
@@ -15171,7 +16018,7 @@ var LocalWechatPlugin = class extends import_obsidian3.Plugin {
     return value2.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&#39;");
   }
 };
-var LocalWechatSettingTab = class extends import_obsidian3.PluginSettingTab {
+var LocalWechatSettingTab = class extends import_obsidian4.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -15180,34 +16027,24 @@ var LocalWechatSettingTab = class extends import_obsidian3.PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
     containerEl.createEl("h2", { text: "Local WeChat Publisher" });
-    new import_obsidian3.Setting(containerEl).setName("\u9ED8\u8BA4\u4E3B\u9898").setDesc("\u7528\u4E8E\u53F3\u4FA7\u9884\u89C8\u548C\u5BFC\u51FA\u7684\u9ED8\u8BA4\u4E3B\u9898\u3002").addDropdown((dropdown) => {
-      this.plugin.getAvailableThemes().forEach((theme) => {
-        dropdown.addOption(theme.id, theme.name);
-      });
-      dropdown.setValue(this.plugin.settings.theme).onChange(async (value2) => {
-        this.plugin.settings.theme = value2;
-        await this.plugin.saveSettings();
+    new import_obsidian4.Setting(containerEl).setName("\u6837\u5F0F\u7F16\u8F91\u5668").setDesc("\u7BA1\u7406\u516C\u4F17\u53F7\u9884\u8BBE\u3001\u81EA\u5B9A\u4E49\u6837\u5F0F\u5B57\u6BB5\u548C\u5B9E\u65F6\u9884\u89C8\u3002").addButton((button) => {
+      button.setButtonText("\u6253\u5F00\u6837\u5F0F\u7F16\u8F91\u5668").setCta().onClick(() => {
+        new StyleEditorModal(this.app, this.plugin).open();
       });
     });
-    new import_obsidian3.Setting(containerEl).setName("\u9ED8\u8BA4\u5B57\u53F7").setDesc("\u63A7\u5236\u5BFC\u51FA HTML \u7684\u57FA\u7840\u5B57\u53F7\u3002").addDropdown((dropdown) => {
-      dropdown.addOption("small", "\u5C0F").addOption("medium", "\u4E2D").addOption("large", "\u5927").setValue(this.plugin.settings.fontSize).onChange(async (value2) => {
-        this.plugin.settings.fontSize = value2;
-        await this.plugin.saveSettings();
-      });
-    });
-    new import_obsidian3.Setting(containerEl).setName("\u5355\u6362\u884C\u8F6C\u4E3A\u6362\u884C\u6807\u7B7E").setDesc("\u542F\u7528\u540E\u4F1A\u5C3D\u91CF\u4FDD\u7559\u5355\u4E2A\u6362\u884C\u3002").addToggle((toggle) => {
+    new import_obsidian4.Setting(containerEl).setName("\u5355\u6362\u884C\u8F6C\u4E3A\u6362\u884C\u6807\u7B7E").setDesc("\u542F\u7528\u540E\u4F1A\u5C3D\u91CF\u4FDD\u7559\u5355\u4E2A\u6362\u884C\u3002").addToggle((toggle) => {
       toggle.setValue(this.plugin.settings.forceLineBreaks).onChange(async (value2) => {
         this.plugin.settings.forceLineBreaks = value2;
         await this.plugin.saveSettings();
       });
     });
-    new import_obsidian3.Setting(containerEl).setName("\u5BFC\u51FA\u6587\u4EF6\u540E\u7F00").setDesc("\u5BFC\u51FA HTML \u6587\u4EF6\u65F6\u8FFD\u52A0\u5230\u539F\u6587\u4EF6\u540D\u540E\u7684\u540E\u7F00\u3002").addText((text7) => {
+    new import_obsidian4.Setting(containerEl).setName("\u5BFC\u51FA\u6587\u4EF6\u540E\u7F00").setDesc("\u5BFC\u51FA HTML \u6587\u4EF6\u65F6\u8FFD\u52A0\u5230\u539F\u6587\u4EF6\u540D\u540E\u7684\u540E\u7F00\u3002").addText((text7) => {
       text7.setPlaceholder(".wechat.html").setValue(this.plugin.settings.exportSuffix).onChange(async (value2) => {
         this.plugin.settings.exportSuffix = value2 || ".wechat.html";
         await this.plugin.saveSettings();
       });
     });
-    new import_obsidian3.Setting(containerEl).setName("\u5BFC\u51FA\u540E\u81EA\u52A8\u6253\u5F00").setDesc("\u5BFC\u51FA HTML \u6587\u4EF6\u540E\u81EA\u52A8\u5728\u6D4F\u89C8\u5668\u4E2D\u65B0\u6807\u7B7E\u9875\u6253\u5F00\u3002\u9ED8\u8BA4\u5173\u95ED\uFF0C\u907F\u514D\u6253\u65AD\u76F4\u63A5\u590D\u5236\u6D41\u7A0B\u3002").addToggle((toggle) => {
+    new import_obsidian4.Setting(containerEl).setName("\u5BFC\u51FA\u540E\u81EA\u52A8\u6253\u5F00").setDesc("\u5BFC\u51FA HTML \u6587\u4EF6\u540E\u81EA\u52A8\u5728\u6D4F\u89C8\u5668\u4E2D\u65B0\u6807\u7B7E\u9875\u6253\u5F00\u3002\u9ED8\u8BA4\u5173\u95ED\uFF0C\u907F\u514D\u6253\u65AD\u76F4\u63A5\u590D\u5236\u6D41\u7A0B\u3002").addToggle((toggle) => {
       toggle.setValue(this.plugin.settings.openAfterExport).onChange(async (value2) => {
         this.plugin.settings.openAfterExport = value2;
         await this.plugin.saveSettings();

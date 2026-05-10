@@ -7,14 +7,14 @@ import rehypeStringify from "rehype-stringify";
 import { visit } from "unist-util-visit";
 import type { Plugin } from "unified";
 import type { Element, Root } from "hast";
-import { buildElementStyles, getThemeById } from "./theme";
+import { buildElementStyles } from "./theme";
 import type { ExportRenderResult, NormalizedDocument, RenderSettings, ResolvedAsset } from "./types";
 
 export async function renderExportHtml(
   normalized: NormalizedDocument,
   settings: RenderSettings
 ): Promise<ExportRenderResult> {
-  const styles = buildElementStyles(getThemeById(settings.theme), settings.fontSize);
+  const styles = buildElementStyles(settings.customStyle);
   const assetMap = new Map(normalized.assets.map((asset) => [asset.id, asset]));
 
   const processor = unified()

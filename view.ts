@@ -1,5 +1,6 @@
-import { ItemView, Setting, WorkspaceLeaf } from "obsidian";
+import { ItemView, WorkspaceLeaf } from "obsidian";
 import type LocalWechatPlugin from "./main";
+import { StyleEditorModal } from "./style-editor-modal";
 import type { RenderWechatArticleResult } from "./types";
 
 export const LOCAL_WECHAT_VIEW_TYPE = "local-wechat-preview-view";
@@ -78,35 +79,13 @@ export class LocalWechatView extends ItemView {
   private renderToolbar(): void {
     this.toolbarEl.empty();
 
-    const controlWrap = this.toolbarEl.createDiv({ cls: "wechat-plugin-toolbar-controls" });
     const actionsWrap = this.toolbarEl.createDiv({ cls: "wechat-plugin-toolbar-actions" });
 
-    const themeSetting = new Setting(controlWrap);
-    themeSetting.setName("主题");
-    themeSetting.addDropdown((dropdown) => {
-      this.plugin.getAvailableThemes().forEach((theme) => {
-        dropdown.addOption(theme.id, theme.name);
-      });
-      dropdown.setValue(this.plugin.settings.theme).onChange(async (value) => {
-        this.plugin.settings.theme = value;
-        await this.plugin.saveSettings();
-        await this.plugin.openPreviewForCurrentFile();
-      });
+    const styleButton = actionsWrap.createEl("button", {
+      text: "样式编辑",
     });
-
-    const fontSetting = new Setting(controlWrap);
-    fontSetting.setName("字号");
-    fontSetting.addDropdown((dropdown) => {
-      dropdown
-        .addOption("small", "小")
-        .addOption("medium", "中")
-        .addOption("large", "大")
-        .setValue(this.plugin.settings.fontSize)
-        .onChange(async (value) => {
-          this.plugin.settings.fontSize = value as typeof this.plugin.settings.fontSize;
-          await this.plugin.saveSettings();
-          await this.plugin.openPreviewForCurrentFile();
-        });
+    styleButton.addEventListener("click", () => {
+      new StyleEditorModal(this.app, this.plugin).open();
     });
 
     const refreshButton = actionsWrap.createEl("button", {
